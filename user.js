@@ -102,7 +102,7 @@ class User extends Duplex {
 
   authenticate() {
     this.authenticated = true
-    this.send(this.server, '001', [this.nickname, ':Welcome'])
+    this.send(this.server, '001', [this.nickname, ':Welcome 😊'])
     this.send(this.server, '002', [this.nickname, `:Your host is ${this.server.hostname} running version ${pkg.version}`])
     this.send(this.server, '003', [this.nickname, `:This server was created ${this.server.created}`])
     this.send(this.server, '004', [this.nickname, pkg.name, pkg.version])

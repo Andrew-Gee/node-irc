@@ -52,7 +52,7 @@
 
         function onOpen() {
             console.log('Connected to IRC server')
-            socket.send(`NICK yodel\r\nUSER yodel 0 * :My Name${crlf}`)
+            socket.send(`NICK yodel${crlf}USER yodel 0 * :My Name${crlf}`)
         }
 
         function onClose() {
@@ -60,7 +60,7 @@
         }
 
         function connect() {
-            socket = new WebSocket('ws://localhost:3000')
+            socket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}`)
             socket.onopen = onOpen
             socket.onclose = onClose
             socket.onmessage = onMessage
