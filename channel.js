@@ -20,6 +20,10 @@ class Channel {
     this.topic = null
 
     this.modes = new Modes(this)
+
+    this.modes.add("n")
+    this.modes.add("t")
+    this.modes.add("l", [50])
   }
 
   static isValidChannelName(name) {
