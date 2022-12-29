@@ -18,7 +18,7 @@ function join(opts) {
     const channel = server.getChannel(channelName)
 
     if (channel.users.length >= channel.modes.paramModes["l"] ?? 0) {
-      user.send(server, ERR_CHANNELISFULL, [channelName, ':Cannot join channel (+l)'])
+      user.send(server, ERR_CHANNELISFULL, [user.nickname, channelName, ':Cannot join channel (+l)'])
       continue
     }
 
