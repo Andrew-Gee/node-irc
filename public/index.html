@@ -12,46 +12,103 @@
     <ul id="messages"></ul>
 
     <script>
-        const socket = new WebSocket('ws://localhost:3000')
-        const messagesList = document.getElementById('messages')
+        let socket = null
 
-        socket.onopen = () => {
-            console.log('Connected to IRC server')
-            socket.send('NICK yodel\r\nUSER yodel 0 * :My Name\r\nJOIN #test\r\n')
-        }
+        const crlf = "\r\n"
+        const oneMinutesInMilliseconds = 1 * 60 * 1000
+        const twoMinutesInMilliseconds = 2 * 60 * 1000
+        let lastReceivedDataAt = new Date()
+        let reconnectTimer = null
+        let pingTimer = null
 
-        socket.onmessage = (event) => {
-            console.log(`Received message: ${event.data}`)
+        function onMessage(event) {
+            clearTimeout(pingTimer)
+            clearTimeout(reconnectTimer)
+            pingTimer = setInterval(ping, oneMinutesInMilliseconds)
+            reconnectTimer = setTimeout(reconnect, twoMinutesInMilliseconds)
+
             if (event.data instanceof Blob) {
                 // Convert the Blob object to a string
                 const reader = new FileReader()
                 reader.onload = () => {
-                    const message = document.createElement('li')
-                    message.textContent = reader.result
-                    messagesList.appendChild(message)
+                    console.log(`Received message blob: ${reader.result}`)
+                    reader.result.split(crlf).forEach(line => {
+                        if (line.trim()) {
+                            print(line)
+                        }
+                    })
                 }
                 reader.readAsText(event.data)
             } else {
-                const message = document.createElement('li')
-                message.textContent = event.data
-                messagesList.appendChild(message)
+                console.log(`Received message text: ${event.data}`)
+                print(event.data)
             }
         }
 
-        socket.onerror = (error) => {
-            console.error(`WebSocket error: ${error}`)
+        function onError(error) {
+            print(`WebSocket error: ${error}`)
+            reconnect()
+        }
+
+        function onOpen() {
+            console.log('Connected to IRC server')
+            socket.send(`NICK yodel\r\nUSER yodel 0 * :My Name${crlf}`)
+        }
+
+        function onClose() {
+            reconnect()
+        }
+
+        function connect() {
+            socket = new WebSocket('ws://localhost:3000')
+            socket.onopen = onOpen
+            socket.onclose = onClose
+            socket.onmessage = onMessage
+            socket.onerror = onError
+            isReconnecting = false
+        }
+
+        function ping() {
+            socket.send(`PING${crlf}`)
+        }
+
+        function reconnect() {
+            if (isReconnecting) {
+                return
+            }
+
+            isReconnecting = true
+            clearTimeout(pingTimer)
+            clearTimeout(reconnectTimer)
+            print("Reconnecting in 5 seconds...")
+            setTimeout(connect, 5 * 1000)
         }
 
         function sendMessage() {
             const messageInput = document.getElementById('message')
-            socket.send(messageInput.value + "\r\n")
+            socket.send(`${messageInput.value}${crlf}`)
             messageInput.value = ''
             messageInput.focus()
             return false
         }
 
+        function print(text) {
+            const messagesList = document.getElementById('messages')
+            const message = document.createElement('li')
+            const date = new Date()
+            const formattedDate = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+            message.textContent = `${formattedDate} ${text}`
+            messagesList.appendChild(message)
+
+            if (text.includes(" ") && text.split(" ")[1] === "001") {
+                socket.send(`JOIN #test${crlf}`)
+            }
+        }
+
         const messageInput = document.getElementById('message')
         messageInput.select()
+
+        connect()
     </script>
 </body>
 

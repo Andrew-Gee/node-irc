@@ -7,6 +7,7 @@ const { Duplex } = require('stream')
 const debug = debuglog('ircs:User')
 
 const crypto = require('crypto')
+const pkg = require('./package.json')
 
 /**
  * Represents a User on the server.
@@ -15,11 +16,12 @@ class User extends Duplex {
   /**
    * @param {stream.Duplex} sock Duplex Stream to read & write commands from & to.
    */
-  constructor(sock) {
+  constructor(server, sock) {
     super({
       readableObjectMode: true,
       writableObjectMode: true
     })
+    this.server = server
     this.socket = sock
     this.channels = []
     this.nickname = null
@@ -96,6 +98,15 @@ class User extends Duplex {
     }
     debug('send', message + '')
     this.write(message)
+  }
+
+  authenticate() {
+    this.authenticated = true
+    this.send(this.server, '001', [this.nickname, ':Welcome'])
+    this.send(this.server, '002', [this.nickname, `:Your host is ${this.server.hostname} running version ${pkg.version}`])
+    this.send(this.server, '003', [this.nickname, `:This server was created ${this.server.created}`])
+    this.send(this.server, '004', [this.nickname, pkg.name, pkg.version])
+    this.send(this.server, 'MODE', [this.nickname, '+w'])
   }
 
   /**

@@ -32,5 +32,9 @@ module.exports = function nick({ user, server, parameters: [nickname] }) {
   user.send(user, 'NICK', [nickname])
   user.channels.forEach(chan => chan.broadcast(user, 'NICK', [nickname]))
 
+  if (user.username && !user.authenticated) {
+    user.authenticate()
+  }
+
   return true
 }

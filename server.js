@@ -27,10 +27,10 @@ class Server extends net.Server {
     if (!sock.pipe) {
       sock = require('websocket-stream')(sock)
     }
-    const user = new User(sock)
+    const user = new User(this, sock)
     this.users.push(user)
     this.emit('user', user)
-    
+
   }
 
   /**
@@ -59,6 +59,9 @@ class Server extends net.Server {
     })
 
     this.on('message', message => {
+      if (!message.user.authenticated && message.command !== "USER" && message.command !== "NICK") {
+        return
+      }
       this.execute(message)
       debug('message', message + '')
     })
