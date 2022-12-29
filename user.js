@@ -1,10 +1,13 @@
-const { debuglog } = require('util');
-const to = require('flush-write-stream');
-const Parser = require('./parser');
-const Message = require('./message');
-const { Duplex } = require('stream');
+const { debuglog } = require('util')
+const to = require('flush-write-stream')
+const Parser = require('./parser')
+const Message = require('./message')
+const { Duplex } = require('stream')
 
-const debug = debuglog('ircs:User');
+const debug = debuglog('ircs:User')
+
+const crypto = require('crypto')
+
 /**
  * Represents a User on the server.
  */
@@ -16,25 +19,32 @@ class User extends Duplex {
     super({
       readableObjectMode: true,
       writableObjectMode: true
-    });
-    this.socket = sock;
-    this.channels = [];
-    this.nickname = null;
-    this.hostname = sock.remoteAddress;
+    })
+    this.socket = sock
+    this.channels = []
+    this.nickname = null
+    // this.hostname = sock.remoteAddress;
     this.on('end', () => {
-      const message = new Message(null, 'QUIT', []);
-      this.onReceive(message);
-    });
+      const message = new Message(null, 'QUIT', [])
+      this.onReceive(message)
+    })
     sock.pipe(Parser()).pipe(to.obj((message, enc, cb) => {
       this.onReceive(message)
       cb()
-    }));
+    }))
     sock.on('error', e => {
-      debug('error', e);
-    });
+      debug('error', e)
+    })
     sock.on('end', e => {
-      this.emit('end', e);
-    });
+      this.emit('end', e)
+    })
+  }
+
+  get hostname() {
+    // return this.socket.remoteAddress
+    const hash = crypto.createHash('sha256')
+    hash.update(this.socket.remoteAddress)
+    return hash.digest('hex')
   }
 
   onReceive(message) {
@@ -49,23 +59,23 @@ class User extends Duplex {
   }
 
   _write(message, enc, cb) {
-    debug('write', message + '');
+    debug('write', message + '')
     if (this.socket.destroyed) {
-      debug('user socket destroyed', this.nickname);
-      this.socket.emit('error');
-      return cb();
+      debug('user socket destroyed', this.nickname)
+      this.socket.emit('error')
+      return cb()
     }
-    this.socket.write(`${message}\r\n`);
+    this.socket.write(`${message}\r\n`)
     cb()
   }
 
   join(channel) {
     if (-1 === this.channels.indexOf(channel)) {
-      this.channels.push(channel);
+      this.channels.push(channel)
     } else {
-      throw new Error(`Already join channel: ${channel.name}`);
+      throw new Error(`Already join channel: ${channel.name}`)
     }
-    return this;
+    return this
   }
 
   /**
@@ -78,7 +88,7 @@ class User extends Duplex {
       message = new Message(...arguments)
     }
     debug('send', message + '')
-    this.write(message);
+    this.write(message)
   }
 
   /**
@@ -90,7 +100,7 @@ class User extends Duplex {
    */
   matchesMask(mask) {
     // simple & temporary
-    return mask === this.mask();
+    return mask === this.mask()
   }
 
   /**
@@ -102,31 +112,32 @@ class User extends Duplex {
   mask() {
     var mask = ''
     if (this.nickname) {
-      mask += this.nickname;
+      mask += this.nickname
       if (this.username) {
-        mask += `!${this.username}`;
+        mask += `!${this.username}`
       }
-      if (this.hostname) {
-        mask += `@${this.hostname}`;
-      }
+      // if (this.socket.remoteAddress) {
+      //   mask += `@${this.socket.remoteAddress}`
+      // }
+      mask += `@${this.hostname}`
     }
-    return mask || false;
+    return mask || false
   }
   /**
    * end socket
    */
   end() {
-    this.socket.end();
-    return this;
+    this.socket.end()
+    return this
   }
 
   toString() {
-    return this.mask();
+    return this.mask()
   }
 
   inspect() {
-    return this.toString();
+    return this.toString()
   }
 }
 
-module.exports = User;
+module.exports = User
