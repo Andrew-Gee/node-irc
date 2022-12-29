@@ -22,7 +22,7 @@ function topic({ user, server, parameters: [channelName, topic] }) {
       user.send(server, ERR_NOTONCHANNEL, [user.nickname, channel.name, ':You\'re not on that channel.'])
       return
     }
-    if (!channel.hasOp(user)) {
+    if (channel.isOnlyOpsSetTopic && !channel.hasOp(user)) {
       user.send(server, ERR_CHANOPRIVSNEEDED, [user.nickname, channel.name, ':You\'re not channel operator'])
       return
     }

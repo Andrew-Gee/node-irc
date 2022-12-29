@@ -1,19 +1,19 @@
-const flagModeChars = [ 'p', 's', 'i', 't', 'n', 'm' ]
-const paramModeChars = [ 'l', 'k' ]
-const listModeChars = [ 'o', 'v' ]
+const flagModeChars = ['p', 's', 'i', 't', 'n', 'm']
+const paramModeChars = ['l', 'k']
+const listModeChars = ['o', 'v']
 
 const isFlagMode = (mode) => flagModeChars.indexOf(mode) !== -1
 const isParamMode = (mode) => paramModeChars.indexOf(mode) !== -1
 const isListMode = (mode) => listModeChars.indexOf(mode) !== -1
 
 class Modes {
-  constructor () {
+  constructor() {
     this.flagModes = {}
     this.paramModes = {}
     this.listModes = {}
   }
 
-  add (mode, params = []) {
+  add(mode, params = []) {
     if (isFlagMode(mode)) {
       this.flagModes[mode] = true
     } else if (isParamMode(mode)) {
@@ -23,7 +23,7 @@ class Modes {
     }
   }
 
-  remove (mode, params = []) {
+  remove(mode, params = []) {
     if (isFlagMode(mode)) {
       delete this.flagModes[mode]
     } else if (isParamMode(mode)) {
@@ -34,7 +34,13 @@ class Modes {
     }
   }
 
-  get (mode) {
+  removeAll(user) {
+    for (const property in this.listModes) {
+      this.listModes[property] = this.listModes[property].filter(item => item !== user.nickname)
+    }
+  }
+
+  get(mode) {
     if (isFlagMode(mode)) {
       return !!this.flagModes[mode]
     } else if (isParamMode(mode)) {
@@ -44,7 +50,7 @@ class Modes {
     }
   }
 
-  has (mode, param) {
+  has(mode, param) {
     if (isFlagMode(mode)) {
       return this.get(mode)
     } else if (isParamMode(mode)) {
@@ -56,11 +62,11 @@ class Modes {
     return false
   }
 
-  flags () {
+  flags() {
     return Object.keys(this.flagModes)
   }
 
-  toString () {
+  toString() {
     let str = '+' + this.flags().join('')
     let params = []
     paramModeChars.forEach((mode) => {
@@ -80,4 +86,4 @@ Modes.isFlagMode = isFlagMode
 Modes.isParamMode = isParamMode
 Modes.isListMode = isListMode
 
-module.exports = Modes;
+module.exports = Modes

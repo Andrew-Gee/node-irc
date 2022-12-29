@@ -29,4 +29,6 @@ module.exports = {
   PING: require('./ping'),
   // Disconnects.
   QUIT: require('./quit'),
+  // Disconnects.
+  KICK: require('./kick'),
 };

@@ -63,3 +63,10 @@ IRC.createServer = options => {
 };
 
 module.exports = IRC;
+
+
+ 
+
+const server = IRC.createServer();
+
+server.listen(6667);

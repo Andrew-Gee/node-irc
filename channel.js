@@ -1,8 +1,8 @@
-const Modes = require('./modes');
-const Message = require('./message');
-const { debuglog } = require('util');
+const Modes = require('./modes')
+const Message = require('./message')
+const { debuglog } = require('util')
 
-const debug = debuglog('ircs:Channel');
+const debug = debuglog('ircs:Channel')
 
 /**
  * Represents an IRC Channel on the server.
@@ -13,7 +13,8 @@ class Channel {
    *
    * @param {string} name Channel name. (Starting with # or &, preferably.)
    */
-  constructor(name) {
+  constructor(server, name) {
+    this.server = server
     this.name = name
     this.users = []
     this.topic = null
@@ -37,16 +38,16 @@ class Channel {
    */
   join(user) {
     if (this.hasUser(user)) {
-      console.log(thsi.toString());
-      throw new Error(`User ${user.nickname} has already join this channel ${this.name}`);
+      console.log(thsi.toString())
+      throw new Error(`User ${user.nickname} has already join this channel ${this.name}`)
     } else {
-      user.join(this);
-      this.users.push(user);
+      user.join(this)
+      this.users.push(user)
     }
     if (this.users.length === 1) {
-      this.addOp(user);
+      this.addOp(user)
     }
-    return this;
+    return this
   }
 
   /**
@@ -62,6 +63,11 @@ class Channel {
     i = user.channels.indexOf(this)
     if (i !== -1) {
       user.channels.splice(i, 1)
+    }
+    this.modes.removeAll(user)
+
+    if (this.users.length === 0) {
+      this.server.destroyChannel(this.name)
     }
   }
 
@@ -83,10 +89,10 @@ class Channel {
    */
   send(message) {
     if (!(message instanceof Message)) {
-      message = new Message(...arguments);
+      message = new Message(...arguments)
     }
-    debug(this.name, 'send', message.toString());
-    this.users.forEach(user => user.send(message));
+    debug(this.name, 'send', message.toString())
+    this.users.forEach(user => user.send(message))
   }
 
   /**
@@ -143,6 +149,10 @@ class Channel {
     return this.modes.has('p')
   }
 
+  get isNoExternalMessages() {
+    return this.modes.has('n')
+  }
+
   get isSecret() {
     return this.modes.has('s')
   }
@@ -155,8 +165,12 @@ class Channel {
     return this.modes.has('m')
   }
 
+  get isOnlyOpsSetTopic() {
+    return this.modes.has('t')
+  }
+
   inspect() {
-    return this.toString();
+    return this.toString()
   }
   toString() {
     return `
@@ -164,8 +178,8 @@ class Channel {
              topic: ${this.topic}
              users: ${this.users.length}
               ${this.users.map(u => `- ${u.nickname}`).join('\n')}
-    `;
+    `
   };
 }
 
-module.exports = Channel;
+module.exports = Channel

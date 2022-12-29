@@ -1,11 +1,11 @@
-const net = require('net');
-const { debuglog } = require('util');
-const each = require('each-async');
-const writer = require('flush-write-stream');
-const User = require('./user');
-const Channel = require('./channel');
-const Message = require('./message');
-const commands = require('./commands');
+const net = require('net')
+const { debuglog } = require('util')
+const each = require('each-async')
+const writer = require('flush-write-stream')
+const User = require('./user')
+const Channel = require('./channel')
+const Message = require('./message')
+const commands = require('./commands')
 
 const debug = debuglog('ircs:Server')
 
@@ -31,36 +31,36 @@ class Server extends net.Server {
    */
   constructor(options = {}, messageHandler) {
     super(options)
-    this.users = [];
-    this.middleware = [];
-    this.created = new Date();
-    this.channels = new Map();
-    this.hostname = options.hostname || 'localhost';
+    this.users = []
+    this.middleware = []
+    this.created = new Date()
+    this.channels = new Map()
+    this.hostname = options.hostname || 'localhost'
     this.on('connection', sock => {
-      const user = new User(sock);
-      this.users.push(user);
-      this.emit('user', user);
-    });
+      const user = new User(sock)
+      this.users.push(user)
+      this.emit('user', user)
+    })
 
     this.on('user', user => {
       user.pipe(writer.obj((message, enc, cb) => {
-        this.emit('message', message, user);
-        cb();
-      }));
-    });
+        this.emit('message', message, user)
+        cb()
+      }))
+    })
 
     this.on('message', message => {
-      this.execute(message);
+      this.execute(message)
       debug('message', message + '')
-    });
+    })
 
     for (const command in commands) {
-      const fn = commands[command];
-      this.use(command, fn);
+      const fn = commands[command]
+      this.use(command, fn)
     }
 
     if (messageHandler) {
-      this.on('message', messageHandler);
+      this.on('message', messageHandler)
     }
 
     debug('server started')
@@ -75,7 +75,7 @@ class Server extends net.Server {
    */
   findUser(nickname) {
     nickname = normalize(nickname)
-    return this.users.find(user => normalize(user.nickname) === nickname);
+    return this.users.find(user => normalize(user.nickname) === nickname)
   }
 
   /**
@@ -103,7 +103,7 @@ class Server extends net.Server {
     }
 
     if (!this.channels.has(channelName)) {
-      this.channels.set(channelName, new Channel(channelName))
+      this.channels.set(channelName, new Channel(this, channelName))
     }
 
     return this.channels.get(channelName)
@@ -117,8 +117,17 @@ class Server extends net.Server {
    * @return {Channel} The Channel.
    */
   getChannel(channelName) {
-    if (!Channel.isValidChannelName(channelName)) return;
-    return this.findChannel(channelName) || this.createChannel(channelName);
+    if (!Channel.isValidChannelName(channelName)) return
+    return this.findChannel(channelName) || this.createChannel(channelName)
+  }
+
+  /**
+   * Destroys a channel by name.
+   *
+   * @param {string} channelName Channel name.
+   */
+  destroyChannel(channelName) {
+    return this.channels.delete(channelName)
   }
 
   /**
@@ -176,7 +185,7 @@ class Server extends net.Server {
    * @return {string} Mask.
    */
   mask() {
-    return this.hostname;
+    return this.hostname
   }
 }
 
@@ -188,4 +197,4 @@ function normalize(str) {
     .replace(/\|/g, '\\')
 }
 
-module.exports = Server;
+module.exports = Server
