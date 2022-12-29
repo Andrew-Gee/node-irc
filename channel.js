@@ -66,7 +66,9 @@ class Channel {
     }
     i = user.channels.indexOf(this)
     if (i !== -1) {
-      user.channels.splice(i, 1)
+      setTimeout(() => {
+        user.channels.splice(i, 1)
+      })
     }
     this.modes.removeAll(user)
 

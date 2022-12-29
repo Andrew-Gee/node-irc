@@ -17,7 +17,7 @@
 
         socket.onopen = () => {
             console.log('Connected to IRC server')
-            socket.send('NICK mynick\r\nUSER myuser 0 * :My Name\r\n')
+            socket.send('NICK yodel\r\nUSER yodel 0 * :My Name\r\nJOIN #test\r\n')
         }
 
         socket.onmessage = (event) => {
