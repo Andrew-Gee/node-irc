@@ -23,6 +23,16 @@ class Server extends net.Server {
     return new Server(options, messageHandler)
   }
 
+  handleConnection = (sock) => {
+    if (!sock.pipe) {
+      sock = require('websocket-stream')(sock)
+    }
+    const user = new User(sock)
+    this.users.push(user)
+    this.emit('user', user)
+    
+  }
+
   /**
    * Create an IRC server.
    *
@@ -36,11 +46,10 @@ class Server extends net.Server {
     this.created = new Date()
     this.channels = new Map()
     this.hostname = options.hostname || 'localhost'
-    this.on('connection', sock => {
-      const user = new User(sock)
-      this.users.push(user)
-      this.emit('user', user)
-    })
+
+
+
+    this.on('connection', this.handleConnection)
 
     this.on('user', user => {
       user.pipe(writer.obj((message, enc, cb) => {
@@ -64,6 +73,8 @@ class Server extends net.Server {
     }
 
     debug('server started')
+
+
   }
 
   /**
@@ -153,7 +164,7 @@ class Server extends net.Server {
     debug('exec', message + '')
     message.server = this
     each(this.middleware, (mw, idx, next) => {
-      if (mw.command === '' || mw.command === message.command) {
+      if (mw.command === '' || mw.command.toUpperCase() === message.command.toUpperCase()) {
         debug('executing', mw.command, message.parameters)
         if (mw.fn.length < 2) {
           mw.fn(message)

@@ -1,0 +1,58 @@
+<html>
+
+<head>
+    <title>IRC Client</title>
+</head>
+
+<body>
+    <form onsubmit="return  sendMessage()">
+        <input id="message" type="text" />
+        <button type="submit">Send</button>
+    </form>
+    <ul id="messages"></ul>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:3000')
+        const messagesList = document.getElementById('messages')
+
+        socket.onopen = () => {
+            console.log('Connected to IRC server')
+            socket.send('NICK mynick\r\nUSER myuser 0 * :My Name\r\n')
+        }
+
+        socket.onmessage = (event) => {
+            console.log(`Received message: ${event.data}`)
+            if (event.data instanceof Blob) {
+                // Convert the Blob object to a string
+                const reader = new FileReader()
+                reader.onload = () => {
+                    const message = document.createElement('li')
+                    message.textContent = reader.result
+                    messagesList.appendChild(message)
+                }
+                reader.readAsText(event.data)
+            } else {
+                const message = document.createElement('li')
+                message.textContent = event.data
+                messagesList.appendChild(message)
+            }
+        }
+
+        socket.onerror = (error) => {
+            console.error(`WebSocket error: ${error}`)
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('message')
+            socket.send(messageInput.value + "\r\n")
+            messageInput.value = ''
+            messageInput.focus()
+            return false
+        }
+
+        const messageInput = document.getElementById('message')
+        messageInput.select()
+    </script>
+</body>
+
+</html>

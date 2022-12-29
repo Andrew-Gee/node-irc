@@ -41,10 +41,17 @@ class User extends Duplex {
   }
 
   get hostname() {
-    // return this.socket.remoteAddress
+    if (this.cachedHostname) {
+      return this.cachedHostname
+    }
+
     const hash = crypto.createHash('sha256')
-    hash.update(this.socket.remoteAddress)
-    return hash.digest('hex')
+    hash.update(this.cachedHostname || this.socket.remoteAddress || this.socket.socket._socket.remoteAddress)
+
+    const digest = hash.digest('hex')
+
+    this.cachedHostname = digest
+    return digest
   }
 
   onReceive(message) {

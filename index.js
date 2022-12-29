@@ -1,72 +1,25 @@
-const tcp = require('net');
-const Parser = require('./parser');
-const EventEmitter = require('events');
-const to = require('flush-write-stream');
+const ircServer = require('./server')
+const irc = ircServer.createServer()
 
-class IRC extends EventEmitter {
-  constructor(options) {
-    super();
-    Object.assign(this, options);
-    this.socket = new tcp.Socket();
-    this.socket.pipe(Parser()).pipe(to.obj((message, enc, cb) => {
-      const { prefix, command, parameters } = message;
-      this.emit(command, parameters);
-      cb()
-    }));
-  }
-  connect() {
-    const { host, port } = this;
-    return new Promise(resolve => {
-      this.socket.connect(port, host, resolve);
-    });
-  }
-  write(command, parameters) {
-    this.socket.write([command].concat(parameters).join(' ') + '\r\n');
-    return this;
-  }
-  nick() {
-    const user = this;
-    return this.write('NICK', [user.nickname]);
-  }
-  user() {
-    const user = this;
-    const { username, hostname = '0', servername = '*', realname } = user;
-    return this.write('USER', [username, hostname, servername, `:${realname}`]);
-  }
-  join(channel) {
-    return this.write('JOIN', [channel]);
-  }
-  send(message, to) {
-    return this.write('PRIVMSG', [to, `:${message}`]);
-  }
-  ping() {
-    const now = Date.now();
-    return this.write('PING', [now]);
-  }
-  pong(x) {
-    return this.write('PING', x);
-  }
-  notice(message, to) {
-    return this.write('NOTICE', [to, `:${message}`]);
-  }
-  part(channel, message) {
-    return this.write('PART', [channel, message]);
-  }
-  quit(message) {
-    return this.write('QUIT', [`:${message}`]);
-  }
-}
+irc.listen(6667)
 
-IRC.Server = require('./server');
-IRC.createServer = options => {
-  return new IRC.Server(options);
-};
+const express = require('express')
+const app = express()
+const http = require('http')
+const WebSocket = require('websocket-stream')
 
-module.exports = IRC;
+// Serve static files from the 'public' directory
+app.use(express.static('public'))
 
+// Create an HTTP server
+const httpServer = http.createServer(app)
 
- 
+// Create a WebSocket server
+const wss = new WebSocket.Server({ server: httpServer })
 
-const server = IRC.createServer();
+// Handle WebSocket connections
+wss.on('connection', irc.handleConnection)
 
-server.listen(6667);
+httpServer.listen(3000, () => {
+  console.log('Server listening on port 3000')
+})

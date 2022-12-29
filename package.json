@@ -17,12 +17,14 @@
   "author": "Lsong",
   "license": "MIT",
   "dependencies": {
-    "split2": "^2.1.1",
     "each-async": "^1.1.1",
+    "express": "^4.18.2",
+    "flush-write-stream": "^2.0.0",
+    "split2": "^2.1.1",
     "stream-combiner": "^0.2.2",
-    "flush-write-stream": "^2.0.0"
+    "websocket-stream": "^5.5.2",
+    "ws": "^8.11.0"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/song940/node-irc.git"
