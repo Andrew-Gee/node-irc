@@ -48,7 +48,7 @@ class User extends Duplex {
     }
 
     const hash = crypto.createHash('sha256')
-    hash.update(this.cachedHostname || this.socket.remoteAddress || this.socket.socket._socket.remoteAddress)
+    hash.update(this.cachedHostname || this.socket.remoteAddress || (this.socket.socket._socket?.remoteAddress ?? "abc"))
 
     const digest = hash.digest('hex')
 

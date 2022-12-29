@@ -1,5 +1,7 @@
 const ircServer = require('./server')
-const irc = ircServer.createServer()
+const irc = ircServer.createServer({
+  hostname: "irc.andrewgee.dev"
+})
 
 irc.listen(6667)
 

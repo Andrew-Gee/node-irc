@@ -13,6 +13,7 @@
 
     <script>
         let socket = null
+        let nickname = prompt("Please enter your nickname")
 
         const crlf = "\r\n"
         const oneMinutesInMilliseconds = 1 * 60 * 1000
@@ -52,7 +53,7 @@
 
         function onOpen() {
             console.log('Connected to IRC server')
-            socket.send(`NICK yodel${crlf}USER yodel 0 * :My Name${crlf}`)
+            socket.send(`NICK ${nickname}${crlf}USER yodel 0 * :My Name${crlf}`)
         }
 
         function onClose() {
@@ -100,9 +101,19 @@
             message.textContent = `${formattedDate} ${text}`
             messagesList.appendChild(message)
 
-            if (text.includes(" ") && text.split(" ")[1] === "001") {
-                socket.send(`JOIN #test${crlf}`)
-            }
+            setTimeout(() => {
+                if (text.includes(" ")) {
+                    switch (text.split(" ")[1]) {
+                        case "001":
+                            socket.send(`JOIN #test${crlf}`)
+                            break
+                        case "433":
+                            nickname = prompt("Please enter your nickname")
+                            socket.send(`NICK ${nickname}${crlf}`)
+                            break
+                    }
+                }
+            }, 100)
         }
 
         const messageInput = document.getElementById('message')
